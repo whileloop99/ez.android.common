@@ -1,0 +1,4 @@
+rootProject.name='TimeRangePicker'
+include ':app'
+include ':lib-common-util'
+include ':lib-timerangepicker'

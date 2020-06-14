@@ -1,0 +1,55 @@
+apply plugin: 'maven-publish' // Apply this plugin at the top of your library build.gradle
+
+def githubProperties = new Properties()
+
+if(rootProject.file("github.properties").exists()) {
+    githubProperties.load(new FileInputStream(rootProject.file("github.properties")))
+} else {
+    githubProperties.put("github.usr", project.property("github.usr") ?: "github.usr_NOT_SET")
+    githubProperties.put("github.key", project.property("github.key") ?: "github.key_NOT_SET")
+}
+
+def getPublishGroupId = { ->
+    return project.ext.publishGroupId ?: "UNCONFIGED_publishGroupId"
+}
+
+def getPublishArtifactId = { ->
+    return project.ext.publishArtifactId ?: "UNCONFIGED_publishArtifactId"
+}
+
+def getPublishVersionName = { ->
+    return project.ext.publishVersionName ?: "UNCONFIGED_publishVersionName"
+}
+
+def getPublishArtifactPath = { ->
+    return "$buildDir/outputs/aar/$project.name-${getPublishVersionName()}-release.aar";
+}
+
+println "ID:        " + getPublishGroupId() + ":" + getPublishArtifactId() + ":" + getPublishVersionName()
+println "Artifact:  " + getPublishArtifactPath()
+println "Url:       " + "https://github.com/${githubProperties['github.usr']}/${getPublishGroupId()}.${getPublishArtifactId()}"
+
+//println githubProperties['github.usr']
+//println githubProperties['github.key']
+
+publishing {
+    publications {
+        bar(MavenPublication) {
+            groupId getPublishGroupId() // Replace with group ID
+            artifactId getPublishArtifactId()
+            version getPublishVersionName()
+            artifact(getPublishArtifactPath())
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/${githubProperties['github.usr']}/${getPublishGroupId()}.${getPublishArtifactId()}")
+            credentials {
+                username = githubProperties['github.usr']
+                password = githubProperties['github.key']
+            }
+        }
+    }
+}
